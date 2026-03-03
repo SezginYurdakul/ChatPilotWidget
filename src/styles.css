@@ -307,6 +307,23 @@
   border-color: #c4b5fd;
 }
 
+/* Translate Toggle */
+.cp-translate-toggle {
+  background: none;
+  border: none;
+  color: var(--cp-text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.cp-translate-toggle:hover { opacity: 1; }
+
+.cp-msg.sent .cp-translate-toggle { color: rgba(255, 255, 255, 0.7); }
+.cp-msg.sent .cp-translate-toggle:hover { color: rgba(255, 255, 255, 0.9); }
+
 /* Typing Indicator */
 .cp-typing {
   display: flex;

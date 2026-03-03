@@ -5,7 +5,8 @@ const EVENTS = {
   MessageSent: 'App\\Events\\MessageSent',
   MessageRead: 'App\\Events\\MessageRead',
   TypingStarted: 'App\\Events\\TypingStarted',
-  AdminStatusChanged: 'App\\Events\\AdminStatusChanged'
+  AdminStatusChanged: 'App\\Events\\AdminStatusChanged',
+  MessageTranslated: 'App\\Events\\MessageTranslated'
 }
 
 export function createWebSocket(config) {
@@ -73,10 +74,13 @@ export function createWebSocket(config) {
     conversationChannel.bind(EVENTS.MessageRead, (data) => emit('read', data))
     conversationChannel.bind(EVENTS.TypingStarted, (data) => emit('typing', data))
 
+    conversationChannel.bind(EVENTS.MessageTranslated, (data) => emit('translated', data))
+
     // Also listen for short event names (in case broadcastAs() is used)
     conversationChannel.bind('MessageSent', (data) => emit('message', data.message))
     conversationChannel.bind('MessageRead', (data) => emit('read', data))
     conversationChannel.bind('TypingStarted', (data) => emit('typing', data))
+    conversationChannel.bind('MessageTranslated', (data) => emit('translated', data))
   }
 
   function subscribeSite(siteId) {

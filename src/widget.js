@@ -11,6 +11,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   let isTyping = false
   let errorMsg = null
   let inputValue = ''
+  const showOriginalSet = new Set() // message IDs where user toggled to see original
 
   // DOM references
   let host, shadow, container
@@ -113,7 +114,9 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       text: msg.text,
       sender: msg.sender_type || msg.sender,
       timestamp: msg.created_at || msg.timestamp,
-      readAt: msg.read_at
+      readAt: msg.read_at,
+      language: msg.language || null,
+      translations: msg.translations || null
     }
   }
 
@@ -148,6 +151,14 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       messages.forEach(m => {
         if (m.sender === 'visitor') m.readAt = new Date().toISOString()
       })
+    })
+
+    ws.on('translated', (data) => {
+      const msg = messages.find(m => m.id === data.message_id)
+      if (msg) {
+        msg.translations = data.translations
+        renderMessagesOnly()
+      }
     })
 
     ws.on('adminStatus', (data) => {
@@ -298,6 +309,28 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
 
   // --- Partial DOM updates (no full re-render) ---
 
+  function renderMessageBubble(msg) {
+    const isVisitor = msg.sender === 'visitor'
+    const isAi = msg.sender === 'ai'
+    const visitorLang = i18n.getLanguage()
+    const hasTranslation = msg.translations && msg.translations[visitorLang]
+    const showingOriginal = showOriginalSet.has(msg.id)
+    const displayText = (hasTranslation && !showingOriginal) ? msg.translations[visitorLang] : msg.text
+
+    const classes = `cp-msg ${isVisitor ? 'sent' : 'received'}${isAi ? ' ai' : ''}`
+    let html = `<div class="${classes}"><div class="cp-msg-content">`
+    if (isAi) html += `<span class="cp-ai-badge">${i18n.t('aiLabel')}</span>`
+    html += `<p>${escapeHtml(displayText)}</p>`
+    if (hasTranslation) {
+      const langCode = (msg.language || 'en').toUpperCase()
+      const label = showingOriginal ? i18n.t('translatedFrom') : i18n.t('showOriginal')
+      html += `<button class="cp-translate-toggle" data-msg-id="${msg.id}">${label}${showingOriginal ? '' : ` (${langCode})`}</button>`
+    }
+    html += `<div class="cp-msg-meta"><span class="cp-msg-time">${formatTime(msg.timestamp)}</span></div>`
+    html += '</div></div>'
+    return html
+  }
+
   function renderMessagesOnly() {
     const msgContainer = shadow.querySelector('.cp-messages')
     if (!msgContainer) return
@@ -306,16 +339,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     if (messages.length === 0) {
       html = `<div class="cp-no-messages">${i18n.t('noMessages')}</div>`
     } else {
-      messages.forEach(msg => {
-        const isVisitor = msg.sender === 'visitor'
-        const isAi = msg.sender === 'ai'
-        const classes = `cp-msg ${isVisitor ? 'sent' : 'received'}${isAi ? ' ai' : ''}`
-        html += `<div class="${classes}"><div class="cp-msg-content">`
-        if (isAi) html += `<span class="cp-ai-badge">${i18n.t('aiLabel')}</span>`
-        html += `<p>${escapeHtml(msg.text)}</p>`
-        html += `<div class="cp-msg-meta"><span class="cp-msg-time">${formatTime(msg.timestamp)}</span></div>`
-        html += '</div></div>'
-      })
+      messages.forEach(msg => { html += renderMessageBubble(msg) })
     }
 
     if (isTyping) {
@@ -326,6 +350,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     }
 
     msgContainer.innerHTML = html
+    bindTranslateToggles()
   }
 
   function updateBadge() {
@@ -417,16 +442,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     if (messages.length === 0) {
       html += `<div class="cp-no-messages">${i18n.t('noMessages')}</div>`
     } else {
-      messages.forEach(msg => {
-        const isVisitor = msg.sender === 'visitor'
-        const isAi = msg.sender === 'ai'
-        const classes = `cp-msg ${isVisitor ? 'sent' : 'received'}${isAi ? ' ai' : ''}`
-        html += `<div class="${classes}"><div class="cp-msg-content">`
-        if (isAi) html += `<span class="cp-ai-badge">${i18n.t('aiLabel')}</span>`
-        html += `<p>${escapeHtml(msg.text)}</p>`
-        html += `<div class="cp-msg-meta"><span class="cp-msg-time">${formatTime(msg.timestamp)}</span></div>`
-        html += '</div></div>'
-      })
+      messages.forEach(msg => { html += renderMessageBubble(msg) })
     }
     if (isTyping) {
       html += `<div class="cp-msg received ai"><div class="cp-msg-content">
@@ -451,6 +467,21 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     return html
   }
 
+  function bindTranslateToggles() {
+    shadow.querySelectorAll('.cp-translate-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msgId = btn.dataset.msgId
+        if (showOriginalSet.has(msgId)) {
+          showOriginalSet.delete(msgId)
+        } else {
+          showOriginalSet.add(msgId)
+        }
+        renderMessagesOnly()
+        scrollToBottom()
+      })
+    })
+  }
+
   function bindEvents() {
     const closeBtn = shadow.querySelector('.cp-close')
     if (closeBtn) closeBtn.addEventListener('click', handleToggle)
@@ -470,6 +501,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     const dismissBtn = shadow.querySelector('.cp-error-dismiss')
     if (dismissBtn) dismissBtn.addEventListener('click', handleDismissError)
 
+    bindTranslateToggles()
     scrollToBottom()
   }
 
