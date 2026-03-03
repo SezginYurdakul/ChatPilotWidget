@@ -31,11 +31,18 @@ export function createApiClient(apiUrl, siteKey) {
       headers['X-Visitor-Token'] = session.visitorToken
     }
 
-    const res = await fetch(`${baseUrl}/api${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : null
-    })
+    let res
+    try {
+      res = await fetch(`${baseUrl}/api${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+      })
+    } catch {
+      const error = new Error('SERVICE_UNAVAILABLE')
+      error.code = 'SERVICE_UNAVAILABLE'
+      throw error
+    }
 
     if (res.status === 429) {
       const data = await res.json().catch(() => ({}))

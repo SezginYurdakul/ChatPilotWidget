@@ -76,6 +76,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
         messages = []
         render()
       }
+      // Network errors: silently fail, polling will retry
     }
   }
 
@@ -204,8 +205,20 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       startPolling(session.conversationId)
       render()
     } catch (err) {
-      console.error('ChatPilot: Failed to start conversation', err)
       btn.disabled = false
+      errorMsg = err.code === 'SERVICE_UNAVAILABLE'
+        ? i18n.t('serviceUnavailable')
+        : (err.message || i18n.t('serviceUnavailable'))
+      // Show error in name form area
+      let errDiv = shadow.querySelector('.cp-name-form .cp-error')
+      if (!errDiv) {
+        errDiv = document.createElement('div')
+        errDiv.className = 'cp-error'
+        const form = shadow.querySelector('.cp-name-form')
+        if (form) form.appendChild(errDiv)
+      }
+      errDiv.innerHTML = `<span>${errorMsg}</span>`
+      errorMsg = null
     }
   }
 
@@ -253,8 +266,11 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
             hideError()
           }
         }, (err.retryAfter || 3) * 1000)
+      } else if (err.code === 'SERVICE_UNAVAILABLE') {
+        errorMsg = i18n.t('serviceUnavailable')
+        showError()
       } else {
-        errorMsg = err.message
+        errorMsg = err.message || i18n.t('serviceUnavailable')
         showError()
       }
       renderMessagesOnly()

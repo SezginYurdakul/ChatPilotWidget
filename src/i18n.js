@@ -15,6 +15,7 @@ const translations = {
     aiActive: 'AI Assistant',
     aiTyping: 'AI is thinking...',
     connectionError: 'Connection lost. Reconnecting...',
+    serviceUnavailable: 'Chat service is currently unavailable. Please try again later.',
     greeting: 'Hi! How can I help you today?'
   },
   nl: {
@@ -33,6 +34,7 @@ const translations = {
     aiActive: 'AI-assistent',
     aiTyping: 'AI denkt na...',
     connectionError: 'Verbinding verbroken. Opnieuw verbinden...',
+    serviceUnavailable: 'Chatservice is momenteel niet beschikbaar. Probeer het later opnieuw.',
     greeting: 'Hallo! Hoe kan ik u vandaag helpen?'
   }
 }
