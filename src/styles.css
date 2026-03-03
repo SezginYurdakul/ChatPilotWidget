@@ -1,0 +1,422 @@
+:host {
+  --cp-primary: #6366f1;
+  --cp-primary-dark: #4f46e5;
+  --cp-bg: #ffffff;
+  --cp-bg-alt: #f9fafb;
+  --cp-text: #111827;
+  --cp-text-secondary: #6b7280;
+  --cp-border: #e5e7eb;
+  --cp-error: #dc2626;
+  --cp-error-bg: #fef2f2;
+  --cp-error-border: #fecaca;
+  --cp-ai-color: #7c3aed;
+  --cp-ai-bg: #ede9fe;
+  --cp-success: #22c55e;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+:host(.dark) {
+  --cp-primary: #818cf8;
+  --cp-primary-dark: #6366f1;
+  --cp-bg: #1f2937;
+  --cp-bg-alt: #374151;
+  --cp-text: #f9fafb;
+  --cp-text-secondary: #9ca3af;
+  --cp-border: #4b5563;
+  --cp-error: #fca5a5;
+  --cp-error-bg: #450a0a;
+  --cp-error-border: #7f1d1d;
+  --cp-ai-color: #c4b5fd;
+  --cp-ai-bg: #2e1065;
+  --cp-success: #4ade80;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.cp-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647;
+}
+
+.cp-container.left {
+  right: auto;
+  left: 24px;
+}
+
+/* Floating Button */
+.cp-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--cp-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, background-color 0.2s;
+  position: relative;
+}
+
+.cp-button:hover {
+  transform: scale(1.05);
+  background: var(--cp-primary-dark);
+}
+
+.cp-button.open {
+  background: var(--cp-text-secondary);
+}
+
+.cp-button svg {
+  width: 28px;
+  height: 28px;
+}
+
+.cp-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* Chat Window */
+.cp-window {
+  position: absolute;
+  bottom: 72px;
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  height: 480px;
+  max-height: calc(100vh - 120px);
+  background: var(--cp-bg);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--cp-border);
+  animation: cp-slideUp 0.2s ease-out;
+}
+
+.cp-container.left .cp-window {
+  right: auto;
+  left: 0;
+}
+
+@keyframes cp-slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.cp-header {
+  padding: 16px;
+  background: var(--cp-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.cp-header-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cp-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+.cp-status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.cp-status.online::before { background: var(--cp-success); }
+.cp-status.ai::before { background: #a78bfa; }
+
+.cp-close {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.cp-close:hover { opacity: 1; }
+.cp-close svg { width: 20px; height: 20px; }
+
+/* Name Form */
+.cp-name-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.cp-name-form p {
+  color: var(--cp-text);
+  margin-bottom: 16px;
+}
+
+.cp-name-form form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cp-name-form input {
+  padding: 12px 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--cp-bg-alt);
+  color: var(--cp-text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cp-name-form input:focus { border-color: var(--cp-primary); }
+
+.cp-name-form button {
+  padding: 12px 24px;
+  background: var(--cp-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cp-name-form button:hover:not(:disabled) { background: var(--cp-primary-dark); }
+.cp-name-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Messages */
+.cp-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cp-no-messages {
+  color: var(--cp-text-secondary);
+  text-align: center;
+  margin: auto;
+}
+
+.cp-msg {
+  display: flex;
+  max-width: 85%;
+}
+
+.cp-msg.sent { align-self: flex-end; }
+.cp-msg.received { align-self: flex-start; }
+
+.cp-msg-content {
+  padding: 10px 14px;
+  border-radius: 16px;
+}
+
+.cp-msg.sent .cp-msg-content {
+  background: var(--cp-primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.cp-msg.received .cp-msg-content {
+  background: var(--cp-bg-alt);
+  color: var(--cp-text);
+  border: 1px solid var(--cp-border);
+  border-bottom-left-radius: 4px;
+}
+
+.cp-msg-content p {
+  margin: 0;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.cp-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cp-msg-time {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.cp-msg.sent .cp-msg-meta { justify-content: flex-end; }
+
+/* AI badge */
+.cp-ai-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cp-ai-color);
+  background: var(--cp-ai-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+.cp-msg.ai .cp-msg-content {
+  border-color: #c4b5fd;
+}
+
+/* Typing Indicator */
+.cp-typing {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.cp-typing span {
+  width: 8px;
+  height: 8px;
+  background: var(--cp-ai-color);
+  border-radius: 50%;
+  animation: cp-bounce 1.4s infinite ease-in-out both;
+}
+
+.cp-typing span:nth-child(1) { animation-delay: -0.32s; }
+.cp-typing span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes cp-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* Input */
+.cp-input-area {
+  border-top: 1px solid var(--cp-border);
+  background: var(--cp-bg);
+  flex-shrink: 0;
+}
+
+.cp-input-form {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.cp-input-form input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--cp-border);
+  border-radius: 20px;
+  font-size: 14px;
+  background: var(--cp-bg-alt);
+  color: var(--cp-text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cp-input-form input:focus { border-color: var(--cp-primary); }
+
+.cp-input-form button {
+  padding: 10px 18px;
+  background: var(--cp-primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cp-input-form button:hover:not(:disabled) { background: var(--cp-primary-dark); }
+.cp-input-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Character counter */
+.cp-char-counter {
+  font-size: 11px;
+  color: var(--cp-text-secondary);
+  text-align: right;
+  padding: 2px 16px 4px;
+}
+
+.cp-char-counter.warning { color: var(--cp-error); }
+
+/* Rate limit error */
+.cp-error {
+  padding: 6px 12px;
+  background: var(--cp-error-bg);
+  color: var(--cp-error);
+  font-size: 12px;
+  text-align: center;
+  border-top: 1px solid var(--cp-error-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cp-error-dismiss {
+  background: none;
+  border: none;
+  color: var(--cp-error);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.cp-error-dismiss:hover { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .cp-container { bottom: 16px; right: 16px; }
+  .cp-container.left { left: 16px; }
+  .cp-button { width: 54px; height: 54px; }
+  .cp-window {
+    width: calc(100vw - 32px);
+    height: calc(100vh - 100px);
+    bottom: 66px;
+  }
+}
