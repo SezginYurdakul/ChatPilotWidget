@@ -178,6 +178,27 @@
 .cp-close:hover { opacity: 1; }
 .cp-close svg { width: 20px; height: 20px; }
 
+.cp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-lang-select {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 4px 6px;
+  min-width: 56px;
+  cursor: pointer;
+}
+
+.cp-lang-select option {
+  color: #111827;
+}
+
 /* Name Form */
 .cp-name-form {
   flex: 1;

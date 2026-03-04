@@ -37,11 +37,14 @@ const ChatPilotWidget = {
       widget.init()
     }
 
-    // Fetch site config to get settings
+    // Fetch site config and set initial admin online state.
     api.getConfig().then(data => {
       const cfg = data.data || data
-      if (cfg.admin_online) {
-        // Admin is online — widget can show status
+      widget.setAdminOnline(Boolean(cfg.admin_online))
+
+      // Subscribe to admin online/offline updates for this site.
+      if (cfg.site_id) {
+        ws.subscribeSite(cfg.site_id)
       }
     }).catch(() => {
       // Config fetch failed — widget works without it

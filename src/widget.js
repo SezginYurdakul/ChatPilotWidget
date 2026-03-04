@@ -12,6 +12,27 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   let errorMsg = null
   let inputValue = ''
   const showOriginalSet = new Set() // message IDs where user toggled to see original
+  const LANGUAGE_STORAGE_KEY = "chatpilot_language"
+  const LANGUAGE_OPTIONS = i18n.getSupportedLanguages ? i18n.getSupportedLanguages() : ["en", "tr", "nl"]
+
+  function getPreferredLanguage() {
+    try {
+      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+      return LANGUAGE_OPTIONS.includes(saved) ? saved : i18n.getLanguage()
+    } catch {
+      return i18n.getLanguage()
+    }
+  }
+
+  function setPreferredLanguage(lang) {
+    if (!LANGUAGE_OPTIONS.includes(lang)) return
+    i18n.setLanguage(lang)
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+    } catch {}
+  }
+
+  setPreferredLanguage(getPreferredLanguage())
 
   // DOM references
   let host, shadow, container
@@ -65,7 +86,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   // Full load — used on init only
   async function loadMessages(conversationId) {
     try {
-      const data = await api.getMessages(conversationId)
+      const data = await api.getMessages(conversationId, null, i18n.getLanguage())
       messages = (data.messages || data.data || data || []).map(normalizeMessage)
       updateUnread()
       render()
@@ -84,7 +105,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   // Poll — only re-renders if there are new messages
   async function pollMessages(conversationId) {
     try {
-      const data = await api.getMessages(conversationId)
+      const data = await api.getMessages(conversationId, null, i18n.getLanguage())
       const fetched = (data.messages || data.data || data || []).map(normalizeMessage)
       if (fetched.length !== messages.length) {
         // Find truly new messages
@@ -313,7 +334,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     const isVisitor = msg.sender === 'visitor'
     const isAi = msg.sender === 'ai'
     const visitorLang = i18n.getLanguage()
-    const hasTranslation = msg.translations && msg.translations[visitorLang]
+    const hasTranslation = !isVisitor && msg.translations && msg.translations[visitorLang]
     const showingOriginal = showOriginalSet.has(msg.id)
     const displayText = (hasTranslation && !showingOriginal) ? msg.translations[visitorLang] : msg.text
 
@@ -418,12 +439,20 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   function renderHeader() {
     const statusClass = isAdminOnline ? 'online' : 'ai'
     const statusText = isAdminOnline ? i18n.t('online') : i18n.t('aiActive')
+    const currentLanguage = i18n.getLanguage()
+    const languageOptions = LANGUAGE_OPTIONS
+      .map((code) => `<option value="${code}" ${currentLanguage === code ? 'selected' : ''}>${code.toUpperCase()}</option>`)
+      .join('')
+
     return `<div class="cp-header">
       <div class="cp-header-info">
         <h3>${i18n.t('title')}</h3>
         <div class="cp-status ${statusClass}">${statusText}</div>
       </div>
-      <button class="cp-close">${CLOSE_ICON}</button>
+      <div class="cp-header-actions">
+        <select class="cp-lang-select" aria-label="Language">${languageOptions}</select>
+        <button class="cp-close">${CLOSE_ICON}</button>
+      </div>
     </div>`
   }
 
@@ -486,6 +515,18 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     const closeBtn = shadow.querySelector('.cp-close')
     if (closeBtn) closeBtn.addEventListener('click', handleToggle)
 
+    const languageSelect = shadow.querySelector('.cp-lang-select')
+    if (languageSelect) {
+      languageSelect.addEventListener('change', (event) => {
+        setPreferredLanguage(event.target.value)
+        const session = api.getSession()
+        if (session?.conversationId) {
+          loadMessages(session.conversationId)
+        }
+        render()
+      })
+    }
+
     const nameForm = shadow.querySelector('.cp-name-form form')
     if (nameForm) nameForm.addEventListener('submit', handleNameSubmit)
 
@@ -515,6 +556,12 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     init,
     open() { if (!isOpen) handleToggle() },
     close() { if (isOpen) handleToggle() },
+    setAdminOnline(online) {
+      isAdminOnline = Boolean(online)
+      if (isOpen) {
+        render()
+      }
+    },
     destroy() {
       stopPolling()
       ws.disconnect()

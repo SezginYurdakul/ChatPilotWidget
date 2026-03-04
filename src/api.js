@@ -85,8 +85,11 @@ export function createApiClient(apiUrl, siteKey) {
       return session
     },
 
-    async getMessages(conversationId, afterId = null) {
-      const query = afterId ? `?after=${afterId}` : ''
+    async getMessages(conversationId, afterId = null, language = null) {
+      const params = new URLSearchParams()
+      if (afterId) params.set('after', afterId)
+      if (language) params.set('language', language)
+      const query = params.toString() ? `?${params.toString()}` : ''
       return request('GET', `/v1/conversations/${conversationId}/messages${query}`)
     },
 
