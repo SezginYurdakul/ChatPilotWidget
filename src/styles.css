@@ -162,7 +162,7 @@
 }
 
 .cp-status.online::before { background: var(--cp-success); }
-.cp-status.ai::before { background: #a78bfa; }
+.cp-status.ai::before { background: var(--cp-success); }
 
 .cp-close {
   background: transparent;
@@ -327,6 +327,58 @@
 .cp-msg.ai .cp-msg-content {
   border-color: #c4b5fd;
 }
+
+/* System Messages */
+.cp-msg.system {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.cp-msg.system .cp-msg-content {
+  background: var(--cp-bg-alt);
+  border: 1px dashed var(--cp-border);
+  border-radius: 12px;
+  padding: 6px 14px;
+  max-width: none;
+}
+
+.cp-msg.system .cp-msg-content p {
+  color: var(--cp-text-secondary);
+  font-size: 12px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Closed Conversation */
+.cp-closed-area {
+  text-align: center;
+  padding: 16px !important;
+}
+
+.cp-closed-msg {
+  color: var(--cp-text-secondary);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.cp-new-chat-btn {
+  background: var(--cp-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cp-new-chat-btn:hover {
+  background: var(--cp-primary-dark);
+}
+
+/* Offline Status */
+.cp-status.offline::before { background: var(--cp-text-secondary); }
 
 /* Translate Toggle */
 .cp-translate-toggle {

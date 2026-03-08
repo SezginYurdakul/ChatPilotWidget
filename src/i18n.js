@@ -18,7 +18,9 @@ const translations = {
     serviceUnavailable: 'Chat service is currently unavailable. Please try again later.',
     translatedFrom: 'Translated from',
     showOriginal: 'Show original',
-    greeting: 'Hi! How can I help you today?'
+    greeting: 'Hi! How can I help you today?',
+    conversationClosed: 'This conversation has been closed.',
+    startNewChat: 'Start New Chat'
   },
   nl: {
     title: 'Live Chat',
@@ -39,7 +41,9 @@ const translations = {
     serviceUnavailable: 'Chatservice is momenteel niet beschikbaar. Probeer het later opnieuw.',
     translatedFrom: 'Vertaald uit',
     showOriginal: 'Toon origineel',
-    greeting: 'Hallo! Hoe kan ik u vandaag helpen?'
+    greeting: 'Hallo! Hoe kan ik u vandaag helpen?',
+    conversationClosed: 'Dit gesprek is gesloten.',
+    startNewChat: 'Nieuw Gesprek'
   },
   de: {
     title: 'Live-Chat',
@@ -144,7 +148,9 @@ const translations = {
     serviceUnavailable: 'Sohbet hizmeti şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
     translatedFrom: 'Şu dilden çevrildi:',
     showOriginal: 'Orijinali göster',
-    greeting: 'Merhaba! Bugün size nasıl yardımcı olabilirim?'
+    greeting: 'Merhaba! Bugün size nasıl yardımcı olabilirim?',
+    conversationClosed: 'Bu görüşme kapatılmıştır.',
+    startNewChat: 'Yeni Sohbet'
   },
   zh: {
     title: '在线聊天',

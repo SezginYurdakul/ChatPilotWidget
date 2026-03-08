@@ -11,6 +11,8 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   let isTyping = false
   let errorMsg = null
   let inputValue = ''
+  let conversationStatus = 'active'
+  let greeting = ''
   const showOriginalSet = new Set() // message IDs where user toggled to see original
   const LANGUAGE_STORAGE_KEY = "chatpilot_language"
   const LANGUAGE_OPTIONS = i18n.getSupportedLanguages ? i18n.getSupportedLanguages() : ["en", "tr", "nl"]
@@ -88,6 +90,13 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     try {
       const data = await api.getMessages(conversationId, null, i18n.getLanguage())
       messages = (data.messages || data.data || data || []).map(normalizeMessage)
+      if (data.conversation_status) {
+        const wasOpen = conversationStatus === 'active'
+        conversationStatus = data.conversation_status
+        if (wasOpen && conversationStatus === 'closed') {
+          stopPolling()
+        }
+      }
       updateUnread()
       render()
       scrollToBottom()
@@ -106,6 +115,18 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   async function pollMessages(conversationId) {
     try {
       const data = await api.getMessages(conversationId, null, i18n.getLanguage())
+      if (data.conversation_status && data.conversation_status !== conversationStatus) {
+        conversationStatus = data.conversation_status
+        if (conversationStatus === 'closed') {
+          stopPolling()
+        }
+        // Status changed — need full re-render for header + input area
+        const fetched2 = (data.messages || data.data || data || []).map(normalizeMessage)
+        messages = fetched2
+        render()
+        scrollToBottom()
+        return
+      }
       const fetched = (data.messages || data.data || data || []).map(normalizeMessage)
       if (fetched.length !== messages.length) {
         // Find truly new messages
@@ -323,6 +344,16 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     }
   }
 
+  function handleNewChat() {
+    stopPolling()
+    ws.disconnect()
+    api.clearSession()
+    hasConversation = false
+    messages = []
+    conversationStatus = 'active'
+    render()
+  }
+
   function handleDismissError() {
     errorMsg = null
     hideError()
@@ -331,6 +362,10 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   // --- Partial DOM updates (no full re-render) ---
 
   function renderMessageBubble(msg) {
+    if (msg.sender === 'system') {
+      return `<div class="cp-msg system"><div class="cp-msg-content"><p>${escapeHtml(msg.text)}</p></div></div>`
+    }
+
     const isVisitor = msg.sender === 'visitor'
     const isAi = msg.sender === 'ai'
     const visitorLang = i18n.getLanguage()
@@ -437,8 +472,17 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   }
 
   function renderHeader() {
-    const statusClass = isAdminOnline ? 'online' : 'ai'
-    const statusText = isAdminOnline ? i18n.t('online') : i18n.t('aiActive')
+    let statusClass, statusText
+    if (conversationStatus === 'closed') {
+      statusClass = 'offline'
+      statusText = i18n.t('conversationClosed')
+    } else if (isAdminOnline) {
+      statusClass = 'online'
+      statusText = i18n.t('online')
+    } else {
+      statusClass = 'ai'
+      statusText = i18n.t('aiActive')
+    }
     const currentLanguage = i18n.getLanguage()
     const languageOptions = LANGUAGE_OPTIONS
       .map((code) => `<option value="${code}" ${currentLanguage === code ? 'selected' : ''}>${code.toUpperCase()}</option>`)
@@ -458,7 +502,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
 
   function renderNameForm() {
     return `<div class="cp-name-form">
-      <p>${i18n.t('enterName')}</p>
+      <p>${greeting || i18n.t('enterName')}</p>
       <form>
         <input type="text" class="cp-name-input" placeholder="${i18n.t('enterName')}" maxlength="50" required>
         <button type="submit" class="cp-name-btn">${i18n.t('startChat')}</button>
@@ -484,6 +528,13 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   }
 
   function renderInputArea() {
+    if (conversationStatus === 'closed') {
+      return `<div class="cp-input-area cp-closed-area">
+        <p class="cp-closed-msg">${i18n.t('conversationClosed')}</p>
+        <button class="cp-new-chat-btn">${i18n.t('startNewChat')}</button>
+      </div>`
+    }
+
     let html = '<div class="cp-input-area">'
     if (errorMsg) {
       html += `<div class="cp-error"><span>${errorMsg}</span><button class="cp-error-dismiss">&times;</button></div>`
@@ -526,6 +577,9 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
         render()
       })
     }
+
+    const newChatBtn = shadow.querySelector('.cp-new-chat-btn')
+    if (newChatBtn) newChatBtn.addEventListener('click', handleNewChat)
 
     const nameForm = shadow.querySelector('.cp-name-form form')
     if (nameForm) nameForm.addEventListener('submit', handleNameSubmit)
@@ -570,6 +624,21 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     setTheme(theme) {
       if (theme === 'dark') host.classList.add('dark')
       else host.classList.remove('dark')
+    },
+    applySettings(settings) {
+      if (!settings?.widget) return
+      const w = settings.widget
+      if (w.theme) {
+        if (w.theme === 'dark') host.classList.add('dark')
+        else host.classList.remove('dark')
+      }
+      if (w.position) {
+        if (w.position === 'bottom-left') container.classList.add('left')
+        else container.classList.remove('left')
+      }
+      if (w.greeting) {
+        greeting = w.greeting
+      }
     }
   }
 }

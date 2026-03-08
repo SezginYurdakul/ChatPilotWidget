@@ -41,6 +41,7 @@ const ChatPilotWidget = {
     api.getConfig().then(data => {
       const cfg = data.data || data
       widget.setAdminOnline(Boolean(cfg.admin_online))
+      widget.applySettings(cfg.settings)
 
       // Subscribe to admin online/offline updates for this site.
       if (cfg.site_id) {

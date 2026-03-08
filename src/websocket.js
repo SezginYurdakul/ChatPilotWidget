@@ -44,7 +44,7 @@ export function createWebSocket(config) {
       wsPort: wsPort || (forceTLS ? 443 : parseInt(url.port) || 80),
       wssPort: wsPort || 443,
       forceTLS,
-      enabledTransports: forceTLS ? ['wss'] : ['ws', 'wss'],
+      enabledTransports: ['ws'],
       disableStats: true,
       cluster: 'mt1'
     })
