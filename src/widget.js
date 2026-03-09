@@ -101,7 +101,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       render()
       scrollToBottom()
     } catch (err) {
-      if (err.status === 403 || err.status === 404) {
+      if (err.status === 401 || err.status === 403 || err.status === 404) {
         api.clearSession()
         hasConversation = false
         messages = []
@@ -310,7 +310,15 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       await api.sendMessage(session.conversationId, text, i18n.getLanguage())
     } catch (err) {
       messages = messages.filter(m => m.id !== tempMsg.id)
-      if (err.code === 'RATE_LIMITED') {
+      if (err.code === 'UNAUTHORIZED') {
+        api.clearSession()
+        hasConversation = false
+        messages = []
+        conversationStatus = 'active'
+        errorMsg = i18n.t('conversationClosed')
+        showError()
+        render()
+      } else if (err.code === 'RATE_LIMITED') {
         errorMsg = i18n.t('rateLimitCooldown')
         showError()
         setTimeout(() => {

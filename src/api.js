@@ -52,6 +52,15 @@ export function createApiClient(apiUrl, siteKey) {
       throw error
     }
 
+    if (res.status === 401) {
+      clearSession()
+      const data = await res.json().catch(() => ({}))
+      const error = new Error(data.message || 'Unauthorized')
+      error.status = 401
+      error.code = 'UNAUTHORIZED'
+      throw error
+    }
+
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
       const error = new Error(data.message || `HTTP ${res.status}`)
