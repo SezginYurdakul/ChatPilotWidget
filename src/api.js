@@ -33,11 +33,16 @@ export function createApiClient(apiUrl, siteKey) {
 
     let res
     try {
-      res = await fetch(`${baseUrl}/api${path}`, {
+      const fetchOptions = {
         method,
         headers,
         body: body ? JSON.stringify(body) : null
-      })
+      }
+      if (method === 'GET' && path === '/v1/site/config') {
+        fetchOptions.cache = 'no-store'
+      }
+
+      res = await fetch(`${baseUrl}/api${path}`, fetchOptions)
     } catch {
       const error = new Error('SERVICE_UNAVAILABLE')
       error.code = 'SERVICE_UNAVAILABLE'
