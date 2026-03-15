@@ -41,6 +41,28 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   let pollInterval = null
   let presencePollInterval = null
 
+  function applyAdminStatus(nextOnline) {
+    const normalized = Boolean(nextOnline)
+    if (isAdminOnline === normalized) {
+      return
+    }
+
+    isAdminOnline = normalized
+
+    if (!isOpen) {
+      return
+    }
+
+    const statusEl = shadow?.querySelector('.cp-status')
+    if (statusEl) {
+      statusEl.className = `cp-status ${isAdminOnline ? 'online' : 'ai'}`
+      statusEl.textContent = isAdminOnline ? i18n.t('online') : i18n.t('aiActive')
+      return
+    }
+
+    render()
+  }
+
   function formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
@@ -92,8 +114,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
       try {
         const data = await api.getConfig()
         const cfg = data.data || data
-        isAdminOnline = Boolean(cfg.admin_online)
-        if (isOpen) render()
+        applyAdminStatus(cfg.admin_online)
       } catch {
         // Silently fail on presence poll errors
       }
@@ -226,10 +247,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     })
 
     ws.on('adminStatus', (data) => {
-      isAdminOnline = data.online
-      if (isOpen) {
-        render()
-      }
+      applyAdminStatus(data.online)
     })
   }
 
@@ -640,10 +658,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     open() { if (!isOpen) handleToggle() },
     close() { if (isOpen) handleToggle() },
     setAdminOnline(online) {
-      isAdminOnline = Boolean(online)
-      if (isOpen) {
-        render()
-      }
+      applyAdminStatus(online)
     },
     startPresencePolling,
     destroy() {
