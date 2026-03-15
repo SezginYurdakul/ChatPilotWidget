@@ -46,6 +46,7 @@ const ChatPilotWidget = {
       // Subscribe to admin online/offline updates for this site.
       if (cfg.site_id) {
         ws.subscribeSite(cfg.site_id)
+        widget.startPresencePolling()
       }
     }).catch(() => {
       // Config fetch failed — widget works without it

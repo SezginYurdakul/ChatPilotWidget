@@ -39,6 +39,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
   // DOM references
   let host, shadow, container
   let pollInterval = null
+  let presencePollInterval = null
 
   function formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -82,6 +83,27 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
     if (pollInterval) {
       clearInterval(pollInterval)
       pollInterval = null
+    }
+  }
+
+  function startPresencePolling() {
+    stopPresencePolling()
+    presencePollInterval = setInterval(async () => {
+      try {
+        const data = await api.getConfig()
+        const cfg = data.data || data
+        isAdminOnline = Boolean(cfg.admin_online)
+        if (isOpen) render()
+      } catch {
+        // Silently fail on presence poll errors
+      }
+    }, 30000)
+  }
+
+  function stopPresencePolling() {
+    if (presencePollInterval) {
+      clearInterval(presencePollInterval)
+      presencePollInterval = null
     }
   }
 
@@ -205,10 +227,8 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
 
     ws.on('adminStatus', (data) => {
       isAdminOnline = data.online
-      const statusEl = shadow.querySelector('.cp-status')
-      if (statusEl) {
-        statusEl.className = `cp-status ${isAdminOnline ? 'online' : 'ai'}`
-        statusEl.textContent = isAdminOnline ? i18n.t('online') : i18n.t('aiActive')
+      if (isOpen) {
+        render()
       }
     })
   }
@@ -354,6 +374,7 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
 
   function handleNewChat() {
     stopPolling()
+    stopPresencePolling()
     ws.disconnect()
     api.clearSession()
     hasConversation = false
@@ -624,8 +645,10 @@ export function createWidget({ api, ws, i18n, position = 'bottom-right' }) {
         render()
       }
     },
+    startPresencePolling,
     destroy() {
       stopPolling()
+      stopPresencePolling()
       ws.disconnect()
       if (host && host.parentNode) host.parentNode.removeChild(host)
     },

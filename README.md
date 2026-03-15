@@ -105,7 +105,10 @@ npm install
 npm run dev      # Start dev server with hot reload
 npm run build    # Build for production (UMD + ESM)
 npm run preview  # Preview the production build
+npm run publish -- /path/to/ChatPilotDev
 ```
+
+`npm run publish -- /path/to/ChatPilotDev` builds the widget and copies `dist/chatpilot-widget.js` into the target ChatPilot backend project's `public/` directory. Use the same command for `ChatPilotProd` by changing the target path.
 
 ### Testing locally
 
